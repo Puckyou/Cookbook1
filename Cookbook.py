@@ -16,45 +16,47 @@ cook_book = {
     ]
   }
 
+def get_the_dish(dishes):
+    new_cook_book = {}
+    with open("book.txt", "r", encoding="utf8" ) as f:
+        cook_book = f.readlines()
+        for dish in dishes:
+            for i, line in enumerate(cook_book):
+                if line.strip() == dish:
+                    dish_list = []
+                    dish_name = cook_book[i]
+                    ingridient_count = int(cook_book[i + 1]) + i + 2
+                    for n in range(i+2,ingridient_count):
+                            new_list = cook_book[n].strip()
+                            my_list = new_list.split(" | ")
+                            new_ingridient = {}
+                            new_ingridient['ingridient_name'] = my_list[0]
+                            new_ingridient['quantity'] = int(my_list[1])
+                            new_ingridient['measure'] = my_list[2]
+                            dish_list.append(new_ingridient)
+                            new_cook_book[dish] = dish_list
+    return new_cook_book
 
 def get_shop_list_by_dishes(dishes, person_count):
-    with open("book.txt", "r", encoding="utf8" ) as f:
-        new_item_list = {}
-        lines = f.readlines()
-        ingridient_dict = {}
-        shop_list = {}
-        new_shop_list_item = {}
-        new_shop_list = {}
-        for dish in dishes:
-            for num, line in enumerate(lines):
-                if line.strip() == dish:
-                    new_list = lines[num+2:num+int(lines[num+1])+2]
-                    for item in new_list:
-                        new_list = item.strip()
-                        my_list = new_list.split(" | ")
-                        new_shop_list['ingridient_name'] = my_list[0]
-                        new_shop_list['quantity'] = int(my_list[1])
-                        new_shop_list['measure'] = my_list[2]
-                        new_shop_list['quantity'] *= person_count
-                        if new_shop_list['ingridient_name'] not in shop_list:
-                            shop_list[new_shop_list['ingridient_name']] = dict(new_shop_list)
-                        else:
-                            shop_list[new_shop_list['ingridient_name']]['quantity'] += new_shop_list['quantity']
+    cook_book = get_the_dish(dishes)
+    shop_list = {}
+    for dish, ingridients in cook_book.items():
+        for ingridient in ingridients:
+          new_shop_list_item = dict(ingridient)
+          new_shop_list_item['quantity'] *= person_count
+          if new_shop_list_item['ingridient_name'] not in shop_list:
+            shop_list[new_shop_list_item['ingridient_name']] = new_shop_list_item
+          else:
+            shop_list[new_shop_list_item['ingridient_name']]['quantity'] += new_shop_list_item['quantity']
     return shop_list
 
 def create_file():
-    f = open("book.txt", "w", encoding="utf8")
-    new_book = {}
-    for dish,ingridient in cook_book.items():
-        ingridient_list = []
-        for i in ingridient:
-            ingridient_list.append(list(i.values()))
-        new_book[dish] = ingridient_list
-    for dish, ingridient in new_book.items():
-        f.write(dish +"\n" + str(len(ingridient)) +"\n")
-        for i in ingridient:
-            f.write(" | ".join(str(item) for item in i) + "\n")
-    f.close()
+    with open("book.txt", "w", encoding="utf8") as f:
+        for dish, ingridient in cook_book.items():
+            f.write("{}\n{}\n".format(dish, len(ingridient)))
+            for i in ingridient:
+                n = [i['ingridient_name'], i['quantity'], i['measure']]
+                f.write("{}\n".format(" | ".join(str(item) for item in n)))
 
 def print_shop_list(shop_list):
     for shop_list_item in shop_list.values():
